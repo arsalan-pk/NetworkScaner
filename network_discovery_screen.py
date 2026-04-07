@@ -118,7 +118,7 @@ class NetworkDiscoveryScreen:
         # Start discovery button
         self.btn_start = ttk.Button(
             content_frame,
-            text="� Radar Scanner",
+            text="�  Scanner",
             command=self.start_discovery,
             style="Action.TButton"
         )

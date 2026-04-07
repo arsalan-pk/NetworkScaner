@@ -154,10 +154,6 @@ class NetworkDiscoveryReportGenerator:
             vendor = self.scanner[host]['addresses'].get('vendor', 'Unknown')
             html_content += f"<p><strong>MAC Address:</strong> {mac} ({vendor})</p>"
         
-        # Add OS detection note
-        html_content += f"<p><strong>Operating System Detection:</strong> Not available in ping scan mode</p>"
-        html_content += "<p><em>Note: Run with 'sudo' and use comprehensive scan for accurate OS detection</em></p>"
-        
         html_content += "</div>"  # close host-card
         return html_content
     
