@@ -79,9 +79,9 @@ class NetworkDiscoveryScreen:
         # Loading animation canvas
         self.canvas = Canvas(
             content_frame, 
-            width=200, 
-            height=200, 
-            bg="#2b2b2b", 
+            width=250, 
+            height=250, 
+            bg="#001100", 
             highlightthickness=0
         )
         self.canvas.pack(pady=30)
@@ -102,7 +102,7 @@ class NetworkDiscoveryScreen:
         # Start discovery button
         self.btn_start = ttk.Button(
             content_frame,
-            text="🔍 Start Network Discovery",
+            text="� Radar Scanner",
             command=self.start_discovery,
             style="Action.TButton"
         )
@@ -122,40 +122,96 @@ class NetworkDiscoveryScreen:
         threading.Thread(target=self._perform_discovery, daemon=True).start()
     
     def animate_loading(self):
-        """Animate the circular loading indicator."""
+        """Animate realistic radar scanner."""
         if not self.is_loading:
             return
         
         # Clear canvas
         self.canvas.delete("all")
         
-        # Draw circular loading animation
-        center_x, center_y = 100, 100
-        radius = 40
+        # Radar parameters
+        center_x, center_y = 125, 125
+        radius = 100
         
-        # Draw background circle
-        self.canvas.create_oval(
-            center_x - radius, center_y - radius,
-            center_x + radius, center_y + radius,
-            outline="#3c3f41", width=4
+        # Draw radar circles (concentric circles)
+        for i in range(1, 5):
+            r = radius * (i / 4)
+            self.canvas.create_oval(
+                center_x - r, center_y - r,
+                center_x + r, center_y + r,
+                outline="#1a472a", width=1
+            )
+        
+        # Draw radar cross lines
+        # Horizontal line
+        self.canvas.create_line(
+            center_x - radius, center_y,
+            center_x + radius, center_y,
+            fill="#1a472a", width=1
+        )
+        # Vertical line
+        self.canvas.create_line(
+            center_x, center_y - radius,
+            center_x, center_y + radius,
+            fill="#1a472a", width=1
+        )
+        # Diagonal lines
+        self.canvas.create_line(
+            center_x - radius*0.7, center_y - radius*0.7,
+            center_x + radius*0.7, center_y + radius*0.7,
+            fill="#1a472a", width=1
+        )
+        self.canvas.create_line(
+            center_x - radius*0.7, center_y + radius*0.7,
+            center_x + radius*0.7, center_y - radius*0.7,
+            fill="#1a472a", width=1
         )
         
-        # Draw animated arc
-        arc_length = 90  # degrees
-        start_angle = self.loading_angle
+        # Draw sweeping radar line
+        sweep_angle = self.loading_angle
+        sweep_end_x = center_x + radius * math.cos(math.radians(sweep_angle))
+        sweep_end_y = center_y - radius * math.sin(math.radians(sweep_angle))
         
-        self.canvas.create_arc(
-            center_x - radius, center_y - radius,
-            center_x + radius, center_y + radius,
-            start=start_angle, extent=arc_length,
-            outline="#4a90e2", width=4, style=tk.ARC
+        # Main sweep line
+        self.canvas.create_line(
+            center_x, center_y,
+            sweep_end_x, sweep_end_y,
+            fill="#00ff00", width=2
         )
+        
+        # Fade effect - draw trailing sweep lines
+        for i in range(1, 4):
+            fade_angle = sweep_angle - (i * 15)
+            fade_end_x = center_x + radius * math.cos(math.radians(fade_angle))
+            fade_end_y = center_y - radius * math.sin(math.radians(fade_angle))
+            alpha = 255 - (i * 60)
+            color = f"#{0:02x}{alpha:02x}{0:02x}" if alpha > 0 else "#001100"
+            self.canvas.create_line(
+                center_x, center_y,
+                fade_end_x, fade_end_y,
+                fill=color, width=2
+            )
+        
+        # Add random target blips
+        if self.loading_angle % 30 == 0:  # Add new blip every 30 degrees
+            import random
+            blip_angle = random.randint(0, 360)
+            blip_distance = random.randint(20, radius - 10)
+            blip_x = center_x + blip_distance * math.cos(math.radians(blip_angle))
+            blip_y = center_y - blip_distance * math.sin(math.radians(blip_angle))
+            
+            # Draw target blip
+            self.canvas.create_oval(
+                blip_x - 3, blip_y - 3,
+                blip_x + 3, blip_y + 3,
+                fill="#ff0000", outline="#ff6666"
+            )
         
         # Update angle for next frame
-        self.loading_angle = (self.loading_angle + 10) % 360
+        self.loading_angle = (self.loading_angle + 3) % 360
         
         # Schedule next frame
-        self.root.after(50, self.animate_loading)
+        self.root.after(30, self.animate_loading)
     
     def _perform_discovery(self):
         """Perform the actual network discovery."""
@@ -195,30 +251,21 @@ class NetworkDiscoveryScreen:
         # Create results display
         results_label = ttk.Label(
             self.results_frame,
-            text="🎉 Network Discovery Complete!",
+            text="🎉 Radar Scan Complete!",
             font=("Helvetica", 16, "bold"),
             foreground="#27ae60",
             background="#2b2b2b"
         )
         results_label.pack(pady=10)
         
-        # Add scan results button
-        btn_scan_results = ttk.Button(
+        # Add report button
+        btn_report = ttk.Button(
             self.results_frame,
-            text="📊 View Scan Results",
-            command=lambda: self.open_scan_results(scanner_core),
+            text="� Generate Report",
+            command=lambda: self.generate_report(scanner_core),
             style="Action.TButton"
         )
-        btn_scan_results.pack(pady=10)
-        
-        # Add new discovery button
-        btn_new_discovery = ttk.Button(
-            self.results_frame,
-            text="🔄 Start New Discovery",
-            command=self.reset_discovery,
-            style="Action.TButton"
-        )
-        btn_new_discovery.pack(pady=5)
+        btn_report.pack(pady=10)
     
     def _show_error(self, error_message):
         """Show discovery error."""
@@ -227,32 +274,26 @@ class NetworkDiscoveryScreen:
         
         error_label = ttk.Label(
             self.results_frame,
-            text=f"❌ Discovery Failed: {error_message}",
+            text=f"❌ Radar Scan Failed: {error_message}",
             font=("Helvetica", 12),
             foreground="#e74c3c",
             background="#2b2b2b"
         )
         error_label.pack(pady=20)
-        
-        btn_retry = ttk.Button(
-            self.results_frame,
-            text="🔄 Retry Discovery",
-            command=self.reset_discovery,
-            style="Action.TButton"
-        )
-        btn_retry.pack(pady=10)
     
-    def open_scan_results(self, scanner_core):
-        """Open detailed scan results screen."""
-        self._clear_screen()
-        self.main_app = NetworkScannerApp(self.root, scanner_core, mode="target")
-    
-    def reset_discovery(self):
-        """Reset for new discovery."""
-        self.results_frame.pack_forget()
-        self.btn_start.pack(pady=20)
-        self.is_loading = False
-        self.loading_angle = 0
+    def generate_report(self, scanner_core):
+        """Generate HTML report from scan results."""
+        try:
+            from report_generator import ReportGenerator
+            report_generator = ReportGenerator(scanner_core.get_scanner())
+            
+            target = "192.168.1.0/24"
+            scanner_name = "Radar Scanner"
+            scan_profile = "Network Discovery"
+            
+            report_generator.generate_html_report(target, scanner_name, scan_profile)
+        except Exception as e:
+            print(f"Report generation failed: {e}")
     
     def back_to_welcome(self):
         """Return to welcome screen."""
