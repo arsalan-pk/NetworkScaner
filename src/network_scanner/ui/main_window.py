@@ -1,8 +1,5 @@
 """
 Main application window for Network Scanner.
-
-This module provides the primary user interface with proper
-separation of concerns and enterprise-grade architecture.
 """
 
 import tkinter as tk
@@ -22,9 +19,6 @@ from .styles import UIStyles
 class NetworkScannerApp:
     """
     Main application window for the Network Scanner.
-    
-    Provides a professional GUI with proper error handling,
-    progress monitoring, and report generation capabilities.
     """
     
     def __init__(self, root: tk.Tk, settings: Optional[Settings] = None) -> None:
@@ -42,8 +36,20 @@ class NetworkScannerApp:
         # Initialize scanner
         try:
             self.scanner = NetworkScanner(progress_callback=self.log_message)
+            self.log_message("✅ Scanner initialized successfully")
         except NetworkScannerError as e:
-            messagebox.showerror("Initialization Error", f"Failed to initialize scanner: {e.message}")
+            messagebox.showerror("Scanner Error", 
+                f"Failed to initialize scanner:\n\n{e.message}\n\n"
+                "Please install nmap:\n"
+                "1. Download from: https://nmap.org/download.html\n"
+                "2. Install and add to PATH\n"
+                "3. Restart this application")
+            self.root.destroy()
+            return
+        except Exception as e:
+            messagebox.showerror("Unexpected Error", 
+                f"Failed to initialize scanner:\n\n{str(e)}\n\n"
+                "Please check your nmap installation.")
             self.root.destroy()
             return
         
@@ -288,6 +294,16 @@ class NetworkScannerApp:
     def start_scan(self) -> None:
         """Start the network scan."""
         if self.is_scanning:
+            return
+        
+        # Check if scanner is available
+        if not hasattr(self, 'scanner') or self.scanner is None:
+            messagebox.showerror("Scanner Error", 
+                "Scanner is not available.\n\n"
+                "Please install nmap:\n"
+                "1. Download from: https://nmap.org/download.html\n"
+                "2. Install and add to PATH\n"
+                "3. Restart this application")
             return
         
         # Get and validate inputs

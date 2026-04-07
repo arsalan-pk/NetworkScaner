@@ -1,9 +1,6 @@
 #!/usr/bin/env python3
 """
-Network Scanner - Professional Network Security Assessment Tool
-
-Simple entry point that uses the enterprise architecture internally
-while providing the same simple interface as the original.
+Network Scanner - Network Security Assessment Tool
 """
 
 import sys
@@ -17,33 +14,16 @@ try:
     import tkinter as tk
     from tkinter import messagebox
     from network_scanner.config.settings import Settings
-    from network_scanner.core.logging_config import LoggerSetup
     from network_scanner.core.exceptions import NetworkScannerError, ConfigurationError
     from network_scanner.ui.main_window import NetworkScannerApp
     
-    def setup_logging() -> None:
-        """Setup basic logging for the application."""
-        try:
-            LoggerSetup.setup_logging(
-                log_level="INFO",
-                log_file="network_scanner.log",
-                console_output=True
-            )
-        except ConfigurationError:
-            # Continue without logging if setup fails
-            pass
-
     def main() -> None:
         """Main application entry point."""
         try:
-            # Setup logging
-            setup_logging()
-            
             # Initialize settings
             try:
                 settings = Settings()
             except ConfigurationError:
-                # Use defaults if config fails
                 settings = Settings()
             
             # Create and run application

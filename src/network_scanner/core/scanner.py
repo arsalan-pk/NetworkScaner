@@ -1,11 +1,7 @@
 """
 Core network scanning engine for Network Scanner.
-
-This module provides the main scanning functionality with proper
-abstraction, error handling, and enterprise features.
 """
 
-import nmap
 import threading
 import time
 from typing import Dict, List, Optional, Callable, Any
@@ -46,10 +42,7 @@ class ScanRequest:
 
 class NetworkScanner:
     """
-    Enterprise-grade network scanning engine.
-    
-    Provides comprehensive network scanning capabilities with proper
-    error handling, threading support, and result management.
+    Network scanning engine.
     """
     
     def __init__(self, progress_callback: Optional[Callable[[str], None]] = None) -> None:
@@ -60,7 +53,7 @@ class NetworkScanner:
             progress_callback: Optional callback function for progress updates
         """
         self.progress_callback = progress_callback
-        self._scanner: Optional[nmap.PortScanner] = None
+        self._scanner = None
         self._is_scanning = False
         self._scan_thread: Optional[threading.Thread] = None
         self._results: List[ScanResult] = []
@@ -70,18 +63,25 @@ class NetworkScanner:
     def _initialize_nmap(self) -> None:
         """Initialize nmap scanner with proper error handling."""
         try:
+            import nmap
             self._scanner = nmap.PortScanner()
             self._log("Nmap scanner initialized successfully")
-        except nmap.PortScannerError as e:
+        except ImportError:
             raise ScanError(
-                "Nmap is not installed or not in PATH",
-                details={"error": str(e)}
+                "nmap Python package is not installed. Install with: pip install python-nmap",
+                details={"error": "python-nmap package missing"}
             )
         except Exception as e:
-            raise ScanError(
-                f"Failed to initialize nmap scanner: {str(e)}",
-                details={"error": str(e)}
-            )
+            if "nmap" in str(e).lower() or "not found" in str(e).lower():
+                raise ScanError(
+                    "Nmap is not installed or not in PATH. Install from: https://nmap.org/download.html",
+                    details={"error": str(e)}
+                )
+            else:
+                raise ScanError(
+                    f"Failed to initialize nmap scanner: {str(e)}",
+                    details={"error": str(e)}
+                )
     
     def _log(self, message: str) -> None:
         """Log message using callback if available."""
