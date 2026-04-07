@@ -61,42 +61,16 @@ class NetworkScanner:
         self._initialize_nmap()
     
     def _initialize_nmap(self) -> None:
-        """Initialize nmap scanner with proper error handling."""
+        """Initialize nmap scanner - simple approach like working version."""
         try:
             import nmap
             self._scanner = nmap.PortScanner()
             self._log("Nmap scanner initialized successfully")
-        except ImportError:
-            raise ScanError(
-                "nmap Python package is not installed. Install with: pip install python-nmap",
-                details={"error": "python-nmap package missing"}
-            )
         except Exception as e:
-            error_msg = str(e).lower()
-            self._log(f"Debug - nmap error: {error_msg}")
-            
-            # Check for common nmap issues
-            if "nmap" in error_msg and ("not found" in error_msg or "command" in error_msg):
-                raise ScanError(
-                    "nmap command not found. Install with: sudo apt install nmap (Linux/Debian/Kali)",
-                    details={"error": str(e)}
-                )
-            elif "nmap" in error_msg and ("permission" in error_msg or "denied" in error_msg):
-                raise ScanError(
-                    "Permission denied. Try running with sudo or check nmap permissions",
-                    details={"error": str(e)}
-                )
-            elif "nmap" in error_msg:
-                raise ScanError(
-                    f"nmap error: {str(e)}\n\n"
-                    "Try: sudo apt install nmap (Linux) or check nmap installation",
-                    details={"error": str(e)}
-                )
-            else:
-                raise ScanError(
-                    f"Failed to initialize nmap scanner: {str(e)}",
-                    details={"error": str(e)}
-                )
+            raise ScanError(
+                f"Nmap is not installed or not in PATH. Install with: sudo apt install nmap (Linux/Debian/Kali)",
+                details={"error": str(e)}
+            )
     
     def _log(self, message: str) -> None:
         """Log message using callback if available."""

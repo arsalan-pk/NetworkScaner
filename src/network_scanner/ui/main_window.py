@@ -33,23 +33,18 @@ class NetworkScannerApp:
         self.settings = settings or Settings()
         self.ui_styles = UIStyles(self.settings)
         
-        # Initialize scanner
+        # Initialize scanner - simple approach
         try:
-            self.scanner = NetworkScanner(progress_callback=self.log_message)
+            import nmap
+            self.scanner = nmap.PortScanner()
             self.log_message("✅ Scanner initialized successfully")
-        except NetworkScannerError as e:
-            messagebox.showerror("Scanner Error", 
-                f"Failed to initialize scanner:\n\n{e.message}\n\n"
+        except Exception as e:
+            messagebox.showerror("Nmap Not Found", 
+                f"Nmap is not installed or not in your PATH.\n\n"
                 "For Linux/Debian/Kali: sudo apt install nmap\n"
                 "For Windows: https://nmap.org/download.html\n"
                 "For macOS: brew install nmap\n\n"
                 "After installation, restart this application")
-            self.root.destroy()
-            return
-        except Exception as e:
-            messagebox.showerror("Unexpected Error", 
-                f"Failed to initialize scanner:\n\n{str(e)}\n\n"
-                "Please check your nmap installation.")
             self.root.destroy()
             return
         
@@ -296,16 +291,7 @@ class NetworkScannerApp:
         if self.is_scanning:
             return
         
-        # Check if scanner is available
-        if not hasattr(self, 'scanner') or self.scanner is None:
-            messagebox.showerror("Scanner Error", 
-                "Scanner is not available.\n\n"
-                "For Linux/Debian/Kali: sudo apt install nmap\n"
-                "For Windows: https://nmap.org/download.html\n"
-                "For macOS: brew install nmap\n\n"
-                "After installation, restart this application")
-            return
-        
+                
         # Get and validate inputs
         target = self.entry_target.get().strip()
         scanner_name = self.entry_name.get().strip()
