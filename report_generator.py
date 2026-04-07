@@ -12,8 +12,13 @@ class ReportGenerator:
     
     def generate_html_report(self, target, scanner_name, scan_profile, open_in_browser=True):
         """Generate and save HTML report for scan results."""
+        # Create Reports directory if it doesn't exist
+        reports_dir = os.path.join(os.getcwd(), "Reports")
+        os.makedirs(reports_dir, exist_ok=True)
+        
         file_path = filedialog.asksaveasfilename(
             defaultextension=".html",
+            initialdir=reports_dir,
             initialfile=f"scan_report_{target.replace('.', '_')}.html",
             title="Save Clean Report",
             filetypes=[("HTML files", "*.html")]
