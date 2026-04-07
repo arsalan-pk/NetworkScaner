@@ -87,14 +87,28 @@ class NetworkScannerUI:
         main_frame = ttk.Frame(self.root, padding="20")
         main_frame.pack(fill=tk.BOTH, expand=True)
 
-        # Header Title
+        # Header Frame with Back Button and Title
+        header_frame = ttk.Frame(main_frame)
+        header_frame.pack(fill=tk.X, pady=(0, 20))
+        
+        # Back Button
+        if self.mode == "target":
+            btn_back = ttk.Button(
+                header_frame,
+                text="← Back to Welcome",
+                command=self.back_to_welcome,
+                width=18
+            )
+            btn_back.pack(side=tk.LEFT)
+        
+        # Title
         if self.mode == "network":
             title_text = "Network Discovery Scanner"
         else:
             title_text = "Target IP Scanner"
         
-        lbl_title = ttk.Label(main_frame, text=title_text, style="Header.TLabel")
-        lbl_title.pack(pady=(0, 20))
+        lbl_title = ttk.Label(header_frame, text=title_text, style="Header.TLabel")
+        lbl_title.pack(side=tk.LEFT, padx=(20, 0))
 
         # Inputs Frame with enhanced styling
         input_container = ttk.Frame(main_frame)
@@ -152,18 +166,6 @@ class NetworkScannerUI:
         # Enhanced Buttons Frame
         btn_container = ttk.Frame(main_frame)
         btn_container.pack(fill=tk.X, pady=20)
-        
-        # Top button row with back button
-        top_btn_frame = ttk.Frame(btn_container)
-        top_btn_frame.pack(anchor=tk.CENTER, pady=(0, 10))
-        
-        self.btn_back = ttk.Button(
-            top_btn_frame, 
-            text="← Back to Welcome", 
-            command=self.back_to_welcome,
-            width=20
-        )
-        self.btn_back.pack()
         
         # Main action buttons
         btn_frame = ttk.Frame(btn_container)
