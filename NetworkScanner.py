@@ -72,6 +72,8 @@ class NetworkScannerApp:
         self.report_generator.generate_html_report(target, scanner_name, scan_profile)
 
 if __name__ == "__main__":
+    from welcome_screen import WelcomeScreen
+    
     root = tk.Tk()
-    app = NetworkScannerApp(root)
+    app = WelcomeScreen(root)
     root.mainloop()

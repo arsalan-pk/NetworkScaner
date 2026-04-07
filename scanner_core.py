@@ -66,8 +66,10 @@ class ScannerCore:
             return "-A -T4"  # -A enables OS detection, version detection, script scanning, traceroute
         elif "Quick" in profile:
             return "-T4 -F"  # Fast scan (fewer ports)
-        elif "Ping" in profile:
+        elif "Ping" in profile or "Network Discovery" in profile:
             return "-sn"     # Ping scan only
+        elif "Comprehensive" in profile:
+            return "-A -T4 -p-"  # Scan all ports with OS detection
         else:
             return "-A -T4"  # Default to intense scan
     
