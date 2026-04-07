@@ -24,7 +24,7 @@ class NetworkScannerUI:
     
     def _setup_window(self):
         """Configure the main window."""
-        self.root.title("Kali-Linux Network & OS Scanner")
+        self.root.title("Network Scanner Developed by Arsalan Khan")
         self.root.geometry("850x700")
         self.root.configure(bg="#2b2b2b")
     
@@ -46,7 +46,7 @@ class NetworkScannerUI:
         main_frame.pack(fill=tk.BOTH, expand=True)
 
         # Header Title
-        lbl_title = ttk.Label(main_frame, text="Network & OS Discovery Scanner", style="Header.TLabel")
+        lbl_title = ttk.Label(main_frame, text="Network Scanner", style="Header.TLabel")
         lbl_title.pack(pady=(0, 20))
 
         # Inputs Frame
