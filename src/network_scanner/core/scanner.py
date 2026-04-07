@@ -72,9 +72,24 @@ class NetworkScanner:
                 details={"error": "python-nmap package missing"}
             )
         except Exception as e:
-            if "nmap" in str(e).lower() or "not found" in str(e).lower():
+            error_msg = str(e).lower()
+            self._log(f"Debug - nmap error: {error_msg}")
+            
+            # Check for common nmap issues
+            if "nmap" in error_msg and ("not found" in error_msg or "command" in error_msg):
                 raise ScanError(
-                    "Nmap is not installed or not in PATH. Install from: https://nmap.org/download.html",
+                    "nmap command not found. Install with: sudo apt install nmap (Linux/Debian/Kali)",
+                    details={"error": str(e)}
+                )
+            elif "nmap" in error_msg and ("permission" in error_msg or "denied" in error_msg):
+                raise ScanError(
+                    "Permission denied. Try running with sudo or check nmap permissions",
+                    details={"error": str(e)}
+                )
+            elif "nmap" in error_msg:
+                raise ScanError(
+                    f"nmap error: {str(e)}\n\n"
+                    "Try: sudo apt install nmap (Linux) or check nmap installation",
                     details={"error": str(e)}
                 )
             else:

@@ -40,10 +40,10 @@ class NetworkScannerApp:
         except NetworkScannerError as e:
             messagebox.showerror("Scanner Error", 
                 f"Failed to initialize scanner:\n\n{e.message}\n\n"
-                "Please install nmap:\n"
-                "1. Download from: https://nmap.org/download.html\n"
-                "2. Install and add to PATH\n"
-                "3. Restart this application")
+                "For Linux/Debian/Kali: sudo apt install nmap\n"
+                "For Windows: https://nmap.org/download.html\n"
+                "For macOS: brew install nmap\n\n"
+                "After installation, restart this application")
             self.root.destroy()
             return
         except Exception as e:
@@ -300,10 +300,10 @@ class NetworkScannerApp:
         if not hasattr(self, 'scanner') or self.scanner is None:
             messagebox.showerror("Scanner Error", 
                 "Scanner is not available.\n\n"
-                "Please install nmap:\n"
-                "1. Download from: https://nmap.org/download.html\n"
-                "2. Install and add to PATH\n"
-                "3. Restart this application")
+                "For Linux/Debian/Kali: sudo apt install nmap\n"
+                "For Windows: https://nmap.org/download.html\n"
+                "For macOS: brew install nmap\n\n"
+                "After installation, restart this application")
             return
         
         # Get and validate inputs
