@@ -35,10 +35,43 @@ class NetworkScannerUI:
         style.configure("TFrame", background="#2b2b2b")
         style.configure("TLabel", background="#2b2b2b", foreground="#e0e0e0", font=("Helvetica", 11))
         style.configure("Header.TLabel", font=("Helvetica", 16, "bold"), foreground="#4a90e2")
-        style.configure("TButton", font=("Helvetica", 11, "bold"), background="#4a90e2", foreground="white", padding=5)
-        style.map('TButton', background=[('active', '#357abd')])
-        style.configure("TEntry", fieldbackground="#3c3f41", foreground="#ffffff")
-        style.configure("TCombobox", fieldbackground="#3c3f41", foreground="#ffffff")
+        
+        # Enhanced button styling
+        style.configure("TButton", 
+                       font=("Helvetica", 11, "bold"), 
+                       background="#4a90e2", 
+                       foreground="white", 
+                       padding=10,
+                       borderwidth=0,
+                       focuscolor='none',
+                       relief="flat")
+        style.map('TButton', 
+                 background=[('active', '#357abd'), ('pressed', '#2968a3')],
+                 relief=[('pressed', 'flat'), ('!pressed', 'flat')])
+        
+        # Enhanced entry styling
+        style.configure("TEntry", 
+                       fieldbackground="#3c3f41", 
+                       foreground="#ffffff",
+                       borderwidth=1,
+                       relief="solid",
+                       padding=8,
+                       insertcolor="#ffffff")
+        style.map("TEntry", 
+                 focuscolor=[('focus', 'none')],
+                 bordercolor=[('focus', '#4a90e2')])
+        
+        # Enhanced combobox styling
+        style.configure("TCombobox", 
+                       fieldbackground="#3c3f41", 
+                       foreground="#ffffff",
+                       borderwidth=1,
+                       relief="solid",
+                       padding=8,
+                       arrowcolor="#e0e0e0")
+        style.map("TCombobox", 
+                 focuscolor=[('focus', 'none')],
+                 bordercolor=[('focus', '#4a90e2')])
     
     def _create_widgets(self):
         """Create all UI widgets."""
@@ -49,40 +82,66 @@ class NetworkScannerUI:
         lbl_title = ttk.Label(main_frame, text="Network Scanner", style="Header.TLabel")
         lbl_title.pack(pady=(0, 20))
 
-        # Inputs Frame
-        input_frame = ttk.Frame(main_frame)
-        input_frame.pack(fill=tk.X, pady=5)
+        # Inputs Frame with enhanced styling
+        input_container = ttk.Frame(main_frame)
+        input_container.pack(fill=tk.X, pady=10)
+        
+        # Add a subtle background frame for inputs
+        input_frame = ttk.Frame(input_container, relief="solid", borderwidth=1)
+        input_frame.pack(fill=tk.X, padx=10, pady=5)
+        
+        # Inner padding for inputs
+        inner_frame = ttk.Frame(input_frame, padding="15")
+        inner_frame.pack(fill=tk.BOTH, expand=True)
 
         # Scanner Name Input
-        ttk.Label(input_frame, text="Scanner Name:").grid(row=0, column=0, sticky=tk.W, pady=5, padx=5)
-        self.entry_name = ttk.Entry(input_frame, width=30)
-        self.entry_name.grid(row=0, column=1, pady=5, padx=5, sticky=tk.W)
+        ttk.Label(inner_frame, text="Scanner Name:", font=("Helvetica", 10, "bold")).grid(
+            row=0, column=0, sticky=tk.W, pady=(8, 8), padx=(0, 15))
+        self.entry_name = ttk.Entry(inner_frame, width=35, font=("Helvetica", 10))
+        self.entry_name.grid(row=0, column=1, pady=(8, 8), padx=(0, 10), sticky=tk.W)
         self.entry_name.insert(0, "Anonymous")
 
         # Target IP Input
-        ttk.Label(input_frame, text="Target IP/Domain:").grid(row=1, column=0, sticky=tk.W, pady=5, padx=5)
-        self.entry_target = ttk.Entry(input_frame, width=30)
-        self.entry_target.grid(row=1, column=1, pady=5, padx=5, sticky=tk.W)
+        ttk.Label(inner_frame, text="Target IP/Domain:", font=("Helvetica", 10, "bold")).grid(
+            row=1, column=0, sticky=tk.W, pady=(8, 8), padx=(0, 15))
+        self.entry_target = ttk.Entry(inner_frame, width=35, font=("Helvetica", 10))
+        self.entry_target.grid(row=1, column=1, pady=(8, 8), padx=(0, 10), sticky=tk.W)
         self.entry_target.insert(0, "127.0.0.1")
 
         # Scan Type Selection
-        ttk.Label(input_frame, text="Scan Profile:").grid(row=2, column=0, sticky=tk.W, pady=5, padx=5)
-        self.combo_profile = ttk.Combobox(input_frame, values=[
+        ttk.Label(inner_frame, text="Scan Profile:", font=("Helvetica", 10, "bold")).grid(
+            row=2, column=0, sticky=tk.W, pady=(8, 8), padx=(0, 15))
+        self.combo_profile = ttk.Combobox(inner_frame, values=[
             "Intense Scan (OS, Services, Default Scripts)",
             "Quick Scan",
             "Ping Scan (Host Discovery)"
-        ], width=40, state="readonly")
+        ], width=42, state="readonly", font=("Helvetica", 10))
         self.combo_profile.current(0)
-        self.combo_profile.grid(row=2, column=1, pady=5, padx=5, sticky=tk.W)
+        self.combo_profile.grid(row=2, column=1, pady=(8, 8), padx=(0, 10), sticky=tk.W)
 
-        # Buttons Frame
-        btn_frame = ttk.Frame(main_frame)
-        btn_frame.pack(fill=tk.X, pady=15)
+        # Enhanced Buttons Frame
+        btn_container = ttk.Frame(main_frame)
+        btn_container.pack(fill=tk.X, pady=20)
+        
+        btn_frame = ttk.Frame(btn_container)
+        btn_frame.pack(anchor=tk.CENTER)
 
-        self.btn_scan = ttk.Button(btn_frame, text="Start Scan", command=self.scan_callback)
-        self.btn_scan.pack(side=tk.LEFT, padx=(0, 10))
+        # Create styled buttons with better spacing
+        self.btn_scan = ttk.Button(
+            btn_frame, 
+            text="▶ Start Scan", 
+            command=self.scan_callback,
+            width=15
+        )
+        self.btn_scan.pack(side=tk.LEFT, padx=(0, 15))
 
-        self.btn_report = ttk.Button(btn_frame, text="Generate HTML Report", command=self.report_callback, state=tk.DISABLED)
+        self.btn_report = ttk.Button(
+            btn_frame, 
+            text="📄 Generate Report", 
+            command=self.report_callback, 
+            state=tk.DISABLED,
+            width=18
+        )
         self.btn_report.pack(side=tk.LEFT)
 
         # Output Text Area
