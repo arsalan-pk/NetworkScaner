@@ -121,8 +121,10 @@ class WelcomeScreen:
     
     def open_network_scan(self):
         """Open network discovery scanning interface."""
+        from network_discovery_screen import NetworkDiscoveryScreen
+        
         self._clear_screen()
-        self.main_app = NetworkScannerApp(self.root, mode="network")
+        self.main_app = NetworkDiscoveryScreen(self.root)
     
     def open_target_scan(self):
         """Open target IP scanning interface."""
