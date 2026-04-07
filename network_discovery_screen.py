@@ -2,6 +2,8 @@ import tkinter as tk
 from tkinter import ttk, Canvas
 import math
 import threading
+import subprocess
+import re
 from ui import NetworkScannerUI
 from scanner_core import ScannerCore
 from report_generator import ReportGenerator
@@ -213,27 +215,182 @@ class NetworkDiscoveryScreen:
         # Schedule next frame
         self.root.after(30, self.animate_loading)
     
+        
+    def _get_local_network_info(self):
+        """Get local IP address and subnet mask using system commands."""
+        try:
+            import platform
+            system = platform.system().lower()
+            
+            if system == "windows":
+                return self._get_windows_network_info()
+            else:
+                return self._get_linux_network_info()
+                
+        except Exception as e:
+            raise Exception(f"Error getting network info: {str(e)}")
+    
+    def _get_windows_network_info(self):
+        """Get network info on Windows using ipconfig."""
+        try:
+            # Run 'ipconfig' command to get network interface information
+            result = subprocess.run(['ipconfig'], capture_output=True, text=True, timeout=10)
+            
+            if result.returncode != 0:
+                raise Exception(f"Failed to execute 'ipconfig' command: {result.stderr}")
+            
+            # Parse the output to find IPv4 addresses and subnet masks
+            lines = result.stdout.split('\n')
+            current_adapter = None
+            adapters = []
+            
+            for line in lines:
+                line = line.strip()
+                if line and not line.startswith(' '):
+                    # New adapter
+                    current_adapter = {'name': line, 'ip': None, 'subnet': None}
+                    adapters.append(current_adapter)
+                elif current_adapter and 'IPv4 Address' in line:
+                    # Extract IP address
+                    ip_match = re.search(r'IPv4 Address[\.]*:\s*(\d+\.\d+\.\d+\.\d+)', line)
+                    if ip_match:
+                        current_adapter['ip'] = ip_match.group(1)
+                elif current_adapter and 'Subnet Mask' in line:
+                    # Extract subnet mask
+                    subnet_match = re.search(r'Subnet Mask[\.]*:\s*(\d+\.\d+\.\d+\.\d+)', line)
+                    if subnet_match:
+                        current_adapter['subnet'] = subnet_match.group(1)
+            
+            # Find the first adapter with valid IP and subnet
+            for adapter in adapters:
+                if (adapter['ip'] and adapter['subnet'] and 
+                    not adapter['ip'].startswith('127.') and 
+                    not adapter['ip'].startswith('169.254.') and
+                    not adapter['ip'].startswith('0.')):
+                    
+                    # Convert subnet mask to CIDR prefix
+                    prefix_length = self._subnet_to_prefix_length(adapter['subnet'])
+                    network_cidr = f"{adapter['ip']}/{prefix_length}"
+                    return adapter['ip'], adapter['subnet'], network_cidr
+            
+            raise Exception("No suitable network interface found")
+            
+        except subprocess.TimeoutExpired:
+            raise Exception("Timeout while executing 'ipconfig' command")
+        except Exception as e:
+            raise Exception(f"Error getting Windows network info: {str(e)}")
+    
+    def _get_linux_network_info(self):
+        """Get network info on Linux using 'ip a' command."""
+        try:
+            # Run 'ip a' command to get network interface information
+            result = subprocess.run(['ip', 'a'], capture_output=True, text=True, timeout=10)
+            
+            if result.returncode != 0:
+                raise Exception(f"Failed to execute 'ip a' command: {result.stderr}")
+            
+            # Parse the output to find IPv4 addresses
+            ip_pattern = r'inet (\d+\.\d+\.\d+\.\d+)/(\d+)'
+            matches = re.findall(ip_pattern, result.stdout)
+            
+            if not matches:
+                raise Exception("No IPv4 addresses found")
+            
+            # Find the first non-loopback interface
+            for ip, prefix_length in matches:
+                if not ip.startswith('127.') and not ip.startswith('169.254.'):
+                    # Convert prefix length to subnet mask
+                    subnet_mask = self._prefix_to_subnet_mask(int(prefix_length))
+                    return ip, subnet_mask, f"{ip}/{prefix_length}"
+            
+            # If no suitable interface found, use the first one
+            if matches:
+                ip, prefix_length = matches[0]
+                subnet_mask = self._prefix_to_subnet_mask(int(prefix_length))
+                return ip, subnet_mask, f"{ip}/{prefix_length}"
+            
+            raise Exception("No suitable network interface found")
+            
+        except subprocess.TimeoutExpired:
+            raise Exception("Timeout while executing 'ip a' command")
+        except FileNotFoundError:
+            raise Exception("'ip' command not found. Please install iproute2 package")
+        except Exception as e:
+            raise Exception(f"Error getting Linux network info: {str(e)}")
+    
+    def _subnet_to_prefix_length(self, subnet_mask):
+        """Convert subnet mask to CIDR prefix length."""
+        try:
+            parts = list(map(int, subnet_mask.split('.')))
+            binary_str = ''.join(f'{part:08b}' for part in parts)
+            return binary_str.count('1')
+        except:
+            return 24  # Default to /24 if conversion fails
+    
+    def _prefix_to_subnet_mask(self, prefix_length):
+        """Convert CIDR prefix length to subnet mask."""
+        if prefix_length < 0 or prefix_length > 32:
+            return "255.255.255.255"
+        
+        mask = (0xffffffff << (32 - prefix_length)) & 0xffffffff
+        return ".".join(str((mask >> (8 * (3 - i))) & 0xff) for i in range(4))
+    
+    def _get_network_range(self, ip_with_prefix):
+        """Extract network range from IP with prefix."""
+        ip, prefix = ip_with_prefix.split('/')
+        # Convert to network address by zeroing host bits
+        ip_parts = list(map(int, ip.split('.')))
+        prefix_length = int(prefix)
+        
+        if prefix_length <= 8:
+            network = f"{ip_parts[0]}.0.0.0/{prefix_length}"
+        elif prefix_length <= 16:
+            network = f"{ip_parts[0]}.{ip_parts[1]}.0.0/{prefix_length}"
+        elif prefix_length <= 24:
+            network = f"{ip_parts[0]}.{ip_parts[1]}.{ip_parts[2]}.0/{prefix_length}"
+        else:
+            network = f"{ip}/{prefix_length}"
+        
+        return network
+
     def _perform_discovery(self):
         """Perform the actual network discovery."""
         try:
             # Initialize scanner
             scanner_core = ScannerCore(log_callback=self._log_message)
             
+            # Get local network information
+            self._log_message("Detecting local network configuration...")
+            local_ip, subnet_mask, network_cidr = self._get_local_network_info()
+            self._log_message(f"Local IP: {local_ip}")
+            self._log_message(f"Subnet Mask: {subnet_mask}")
+            self._log_message(f"Network Range: {network_cidr}")
+            
+            # Get network range for scanning
+            target = self._get_network_range(network_cidr)
+            self._log_message(f"Scanning network: {target}")
+            
             # Perform network discovery scan
-            target = "192.168.1.0/24"  # Default network range
             profile = "Network Discovery (Ping Scan)"
             
-            # Simulate discovery process
-            import time
-            time.sleep(3)  # Simulate scanning time
-            
-            # Stop loading animation
-            self.is_loading = False
-            self.root.after(0, self._show_results, scanner_core)
+            # Start the actual scan
+            scanner_core.start_scan(
+                target=target,
+                profile=profile,
+                scan_finished_callback=lambda success, hosts: self._scan_finished(success, hosts, scanner_core)
+            )
             
         except Exception as e:
             self.is_loading = False
             self.root.after(0, self._show_error, str(e))
+    
+    def _scan_finished(self, success, hosts, scanner_core):
+        """Handle scan completion."""
+        self.is_loading = False
+        if success:
+            self.root.after(0, self._show_results, scanner_core)
+        else:
+            self.root.after(0, self._show_error, "Network scan failed")
     
     def _log_message(self, message):
         """Log discovery messages."""
@@ -287,9 +444,11 @@ class NetworkDiscoveryScreen:
             from report_generator import ReportGenerator
             report_generator = ReportGenerator(scanner_core.get_scanner())
             
-            target = "192.168.1.0/24"
-            scanner_name = "Radar Scanner"
-            scan_profile = "Network Discovery"
+            # Get the network information that was used for scanning
+            local_ip, subnet_mask, network_cidr = self._get_local_network_info()
+            target = self._get_network_range(network_cidr)
+            scanner_name = "Network Discovery Scanner"
+            scan_profile = "Network Discovery (Ping Scan)"
             
             report_generator.generate_html_report(target, scanner_name, scan_profile)
         except Exception as e:

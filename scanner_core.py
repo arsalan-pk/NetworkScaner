@@ -67,7 +67,7 @@ class ScannerCore:
         elif "Quick" in profile:
             return "-T4 -F"  # Fast scan (fewer ports)
         elif "Ping" in profile or "Network Discovery" in profile:
-            return "-sn"     # Ping scan only
+            return "-sn -n"  # Ping scan only, no DNS resolution
         elif "Comprehensive" in profile:
             return "-A -T4 -p-"  # Scan all ports with OS detection
         else:
