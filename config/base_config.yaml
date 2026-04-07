@@ -1,0 +1,47 @@
+# Base configuration for Network Scanner
+# This file contains default settings that apply to all environments
+
+app:
+  name: "Network Scanner"
+  version: "1.0.0"
+  debug: false
+  log_level: "INFO"
+
+ui:
+  theme: "dark"
+  window_width: 850
+  window_height: 700
+  bg_color: "#2b2b2b"
+  fg_color: "#e0e0e0"
+  accent_color: "#4a90e2"
+
+logging:
+  level: "INFO"
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  file: "network_scanner.log"
+  max_size: "10MB"
+  backup_count: 5
+  console: true
+
+scanning:
+  timeout: 300
+  max_threads: 10
+  default_profile: "intense_scan"
+  max_concurrent_scans: 1
+
+reports:
+  default_format: "html"
+  include_recommendations: true
+  include_summary: true
+  template_dir: "templates"
+
+security:
+  validate_inputs: true
+  sanitize_inputs: true
+  max_target_length: 253
+  max_scanner_name_length: 100
+
+performance:
+  cache_results: true
+  cache_ttl: 3600
+  max_memory_usage: "512MB"

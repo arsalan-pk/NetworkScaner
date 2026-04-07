@@ -1,0 +1,30 @@
+# Enterprise Network Scanner Requirements
+# Core dependencies for the network scanning application
+
+# Network scanning
+python-nmap==0.7.1
+
+# GUI framework (tkinter is built-in, but we need ttk themes)
+# tkinter comes pre-installed with Python
+
+# Configuration management
+PyYAML==6.0.1
+
+# Type checking and annotations
+typing-extensions==4.7.1
+
+# Development dependencies (optional)
+# pytest==7.4.0
+# pytest-cov==4.1.0
+# black==23.7.0
+# flake8==6.0.0
+# mypy==1.5.1
+
+# Documentation (optional)
+# sphinx==7.1.2
+# sphinx-rtd-theme==1.3.0
+
+# Security and validation (optional for advanced features)
+# cryptography==41.0.4
+# requests==2.31.0
+# urllib3==2.0.4
