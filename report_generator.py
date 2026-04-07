@@ -1,4 +1,5 @@
 import os
+import webbrowser
 from datetime import datetime
 from tkinter import filedialog, messagebox
 
@@ -9,7 +10,7 @@ class ReportGenerator:
     def __init__(self, scanner):
         self.scanner = scanner
     
-    def generate_html_report(self, target, scanner_name, scan_profile):
+    def generate_html_report(self, target, scanner_name, scan_profile, open_in_browser=True):
         """Generate and save HTML report for scan results."""
         file_path = filedialog.asksaveasfilename(
             defaultextension=".html",
@@ -27,11 +28,29 @@ class ReportGenerator:
         try:
             with open(file_path, 'w', encoding='utf-8') as f:
                 f.write(html_content)
+            
             messagebox.showinfo("Success", f"Report successfully saved to:\n{file_path}")
+            
+            # Open report in browser if requested
+            if open_in_browser:
+                self._open_report_in_browser(file_path)
+            
             return True
         except Exception as e:
             messagebox.showerror("Error", f"Failed to save report:\n{str(e)}")
             return False
+    
+    def _open_report_in_browser(self, file_path):
+        """Open the HTML report in Firefox or default browser."""
+        try:
+            # Try to open in Firefox first
+            try:
+                webbrowser.get('firefox').open(f'file://{os.path.abspath(file_path)}')
+            except webbrowser.Error:
+                # If Firefox is not available, try to open in default browser
+                webbrowser.open(f'file://{os.path.abspath(file_path)}')
+        except Exception as e:
+            messagebox.showwarning("Browser Error", f"Could not open report in browser:\n{str(e)}")
     
     def _build_html_report(self, target, scanner_name, scan_date, scan_profile):
         """Build the complete HTML report content."""
