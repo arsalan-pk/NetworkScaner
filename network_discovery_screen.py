@@ -101,6 +101,19 @@ class NetworkDiscoveryScreen:
         # Results frame (initially hidden)
         self.results_frame = ttk.Frame(content_frame)
         
+        # Log display area (initially hidden)
+        self.log_frame = ttk.Frame(content_frame)
+        self.text_output = tk.Text(
+            self.log_frame, 
+            height=12, 
+            width=80, 
+            bg="#1e1e1e", 
+            fg="#00ff00", 
+            font=("Consolas", 10),
+            insertbackground="#00ff00"
+        )
+        self.text_output.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
+        
         # Start discovery button
         self.btn_start = ttk.Button(
             content_frame,
@@ -117,11 +130,20 @@ class NetworkDiscoveryScreen:
         self.loading_label.pack(pady=(0, 20))
         self.canvas.pack(pady=30)
         
+        # Clear and show log frame
+        self._clear_log()
+        self.log_frame.pack(fill=tk.BOTH, expand=True, pady=10)
+        
         # Start loading animation
         self.animate_loading()
         
         # Start network discovery in background thread
         threading.Thread(target=self._perform_discovery, daemon=True).start()
+    
+    def _clear_log(self):
+        """Clear the log display."""
+        if hasattr(self, 'text_output'):
+            self.text_output.delete(1.0, tk.END)
     
     def animate_loading(self):
         """Animate realistic radar scanner."""
@@ -393,8 +415,13 @@ class NetworkDiscoveryScreen:
             self.root.after(0, self._show_error, "Network scan failed")
     
     def _log_message(self, message):
-        """Log discovery messages."""
-        print(f"[Discovery] {message}")  # For debugging
+        """Log discovery messages to UI display."""
+        if hasattr(self, 'text_output'):
+            self.text_output.insert(tk.END, message + "\n")
+            self.text_output.see(tk.END)
+            self.root.update_idletasks()  # Update UI immediately
+        else:
+            print(f"[Discovery] {message}")  # Fallback to console if UI not ready
     
     def _show_results(self, scanner_core):
         """Show discovery results."""
@@ -402,13 +429,16 @@ class NetworkDiscoveryScreen:
         self.canvas.pack_forget()
         self.loading_label.pack_forget()
         
+        # Show log frame with scan results
+        self.log_frame.pack(fill=tk.BOTH, expand=True, pady=10)
+        
         # Show results
         self.results_frame.pack(fill=tk.BOTH, expand=True, pady=20)
         
         # Create results display
         results_label = ttk.Label(
             self.results_frame,
-            text="🎉 Radar Scan Complete!",
+            text="🎉  Scan Complete!",
             font=("Helvetica", 16, "bold"),
             foreground="#27ae60",
             background="#2b2b2b"
@@ -431,7 +461,7 @@ class NetworkDiscoveryScreen:
         
         error_label = ttk.Label(
             self.results_frame,
-            text=f"❌ Radar Scan Failed: {error_message}",
+            text=f"❌  Scan Failed: {error_message}",
             font=("Helvetica", 12),
             foreground="#e74c3c",
             background="#2b2b2b"
@@ -450,7 +480,8 @@ class NetworkDiscoveryScreen:
             scanner_name = "Network Discovery Scanner"
             scan_profile = "Network Discovery (Ping Scan)"
             
-            report_generator.generate_html_report(target, scanner_name, scan_profile)
+            # Generate and open report in browser (same as target section)
+            report_generator.generate_html_report(target, scanner_name, scan_profile, open_in_browser=True)
         except Exception as e:
             print(f"Report generation failed: {e}")
     
