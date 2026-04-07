@@ -7,6 +7,7 @@ import re
 from ui import NetworkScannerUI
 from scanner_core import ScannerCore
 from report_generator import ReportGenerator
+from network_discovery_report_generator import NetworkDiscoveryReportGenerator
 
 
 class NetworkDiscoveryScreen:
@@ -469,22 +470,22 @@ class NetworkDiscoveryScreen:
         error_label.pack(pady=20)
     
     def generate_report(self, scanner_core):
-        """Generate HTML report from scan results."""
+        """Generate HTML report from scan results using separate report generator."""
         try:
-            from report_generator import ReportGenerator
-            report_generator = ReportGenerator(scanner_core.get_scanner())
-            
             # Get the network information that was used for scanning
             local_ip, subnet_mask, network_cidr = self._get_local_network_info()
             target = self._get_network_range(network_cidr)
             scanner_name = "Network Discovery Scanner"
             scan_profile = "Network Discovery (Ping Scan)"
             
-            # Generate and open report in browser (same as target section)
+            # Use the separate network discovery report generator
+            report_generator = NetworkDiscoveryReportGenerator(scanner_core.get_scanner())
             report_generator.generate_html_report(target, scanner_name, scan_profile, open_in_browser=True)
+            
         except Exception as e:
-            print(f"Report generation failed: {e}")
+            print(f"Network Discovery report generation failed: {e}")
     
+        
     def back_to_welcome(self):
         """Return to welcome screen."""
         from welcome_screen import WelcomeScreen
